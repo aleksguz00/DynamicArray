@@ -13,12 +13,20 @@ public:
             std::copy(arr.begin(), arr.end(), arr_);
         }
 
-    DynamicArray(const DynamicArray& other) : size_{ other.size_ } {
-        arr_ = new T[size_];
+    // DynamicArray(const DynamicArray& other) : size_{ other.size_ } {
+    //     arr_ = new T[size_];
 
-        for (size_t i = 0; i < other.size_; ++i) {
-            arr_[i] = other.arr_[i];
-        }
+    //     for (size_t i = 0; i < other.size_; ++i) {
+    //         arr_[i] = other.arr_[i];
+    //     }
+    // }
+
+    DynamicArray(DynamicArray&& other) {
+        size_ = other.size_;
+        arr_ = other.arr_;
+
+        other.arr_ = nullptr;
+        other.size_ = 0;
     }
 
     ~DynamicArray() {
@@ -28,21 +36,33 @@ public:
         }
     }
 
-    DynamicArray& operator=(DynamicArray& other) {
+    // DynamicArray& operator=(DynamicArray& other) {
+    //     if (this == &other) return *this;
+
+    //     if (arr_ != nullptr ) {
+    //         delete[] arr_;
+    //     }
+        
+    //     arr_ = nullptr;
+
+    //     size_ = other.size_;
+    //     arr_ = new T[size_];
+
+    //     for (size_t i = 0; i < size_; ++i) {
+    //         arr_[i] = other.arr_[i];
+    //     }
+
+    //     return *this;
+    // }
+
+    DynamicArray& operator=(DynamicArray&& other) {
         if (this == &other) return *this;
 
-        if (arr_ != nullptr ) {
-            delete[] arr_;
-        }
-        
-        arr_ = nullptr;
-
         size_ = other.size_;
-        arr_ = new T[size_];
+        arr_ = other.arr_;
 
-        for (size_t i = 0; i < size_; ++i) {
-            arr_[i] = other.arr_[i];
-        }
+        other.arr_ = nullptr;
+        other.size_ = 0;
 
         return *this;
     }
@@ -217,21 +237,10 @@ private:
 
 int main() {
     DynamicArray<int> arr{ 3, 1, 4, 1, 5, 9, 2, 6 };
-    DynamicArray<int> arr1{ 1, 2, 3, 4, 5 };
-
-    arr1 = arr;
-
-    std::cout << "Arr 1: ";
-    arr.Print();
+    DynamicArray<int> arr1{ std::move(arr) };
 
     std::cout << "Arr 2: ";
     arr1.Print();
-
-    arr.Remove(9);
-
-    std::cout << "Arr 1 after change: ";
+    std::cout << "Arr 1: ";
     arr.Print();
-
-    std::cout << "Arr 2 after change: ";
-    arr1.Print();
 }
