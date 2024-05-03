@@ -7,10 +7,10 @@ template <class T>
 class DynamicArray {
 public:
     DynamicArray() : arr_{ nullptr }, size_{ 0 } {}
-    DynamicArray(const size_t size) : arr_{ new T[size] }, size_{ size } {}
+    DynamicArray(const size_t size) : arr_{ std::make_unique<T[]>(size) }, size_{ size } {}
     DynamicArray(const std::initializer_list<T>& arr) :
         DynamicArray(arr.size()) {
-            std::copy(arr.begin(), arr.end(), arr_);
+            std::copy(arr.begin(), arr.end(), arr_.get());
         }
 
     // DynamicArray(const DynamicArray& other) : size_{ other.size_ } {
@@ -21,19 +21,13 @@ public:
     //     }
     // }
 
-    DynamicArray(DynamicArray&& other) {
-        size_ = other.size_;
-        arr_ = other.arr_;
-
-        other.arr_ = nullptr;
-        other.size_ = 0;
-    }
+    DynamicArray(DynamicArray&& other) noexcept :
+        size_{ other.size_ }, arr_{ std::move(other.arr_) } {
+            other.size_ = 0;
+        }
 
     ~DynamicArray() {
-        if (arr_ != nullptr) {
-            delete[] arr_;
-            size_ = 0;
-        }
+        size_ = 0;
     }
 
     // DynamicArray& operator=(DynamicArray& other) {
@@ -59,47 +53,44 @@ public:
         if (this == &other) return *this;
 
         size_ = other.size_;
-        arr_ = other.arr_;
+        arr_ = std::move(other.arr_);
 
-        other.arr_ = nullptr;
         other.size_ = 0;
 
         return *this;
     }
 
     void PushFront(const T value) {
-        T* temp_arr = new T[size_];
+        auto temp_arr = std::make_unique<T[]>(size_ + 1);
 
         for (size_t i = 1; i < size_ + 1; ++i) {
             temp_arr[i] = arr_[i - 1];
         }
         temp_arr[0] = value;
 
-        delete[] arr_;
-        arr_ = temp_arr;
-        temp_arr = nullptr;
+        arr_ = std::move(temp_arr);
 
         ++size_;
     }
 
     void PushBack(const T value) {
-        T* temp_arr = new T[size_ + 1];
+        auto temp_arr = std::make_unique<T[]>(size_ + 1);
 
         for (size_t i = 0; i < size_; ++i) {
             temp_arr[i] = arr_[i];
         }
         temp_arr[size_] = value;
 
-        delete[] arr_;
-        arr_ = temp_arr;
-        temp_arr = nullptr;
+        // delete[] arr_;
+        arr_ = std::move(temp_arr);
+        // temp_arr = nullptr;
 
         ++size_;
     }
 
     void Insert(const size_t index, const T value) {
         if (index >= 0 && index <= size_) {
-            T* temp_arr = new T[size_ + 1];
+            auto temp_arr = std::make_unique<T[]>(size_ + 1);
 
             for (size_t i = 0; i < index; ++i) {
                 temp_arr[i] = arr_[i];
@@ -111,9 +102,9 @@ public:
                 temp_arr[i] = arr_[i - 1];
             }
 
-            delete[] arr_;
-            arr_ = temp_arr;
-            temp_arr = nullptr;
+            // delete[] arr_;
+            arr_ = std::move(temp_arr);
+            // temp_arr = nullptr;
 
             ++size_;
         }
@@ -124,35 +115,35 @@ public:
     }
 
     void PopFront() {
-        T* temp_arr = new T[size_ - 1];
+        auto temp_arr = std::make_unique<T[]>(size_ - 1);
 
         for (size_t i = 1; i < size_; ++i) {
             temp_arr[i - 1] = arr_[i];
         }
 
-        delete[] arr_;
-        arr_ = temp_arr;
-        temp_arr = nullptr;
+        // delete[] arr_;
+        arr_ = std::move(temp_arr);
+        // temp_arr = nullptr;
 
         --size_;
     }
 
     void PopBack() {
-        T* temp_arr = new T[size_ - 1];
+        auto temp_arr = std::make_unique<T[]>(size_ - 1);
 
         for (size_t i = 0; i < size_ - 1; ++i) {
             temp_arr[i] = arr_[i];
         }
 
-        delete[] arr_;
-        arr_ = temp_arr;
-        temp_arr = nullptr;
+        // delete[] arr_;
+        arr_ = std::move(temp_arr);
+        // temp_arr = nullptr;
 
         --size_;
     }
 
     void Remove(T element) {
-        T* temp_arr = new T[size_ - 1];
+        auto temp_arr = std::make_unique<T[]>(size_ - 1);
 
         int index = LinearSearch_(element);
 
@@ -167,9 +158,9 @@ public:
 
             --size_;
 
-            delete[] arr_;
-            arr_ = temp_arr;
-            temp_arr = nullptr;
+            // delete[] arr_;
+            arr_ = std::move(temp_arr);
+            // temp_arr = nullptr;
         }
         else {
             std::cout << "There is no such an element\n";
@@ -220,7 +211,7 @@ public:
     }
 
 private:    
-    T* arr_;
+    std::unique_ptr<T[]> arr_;
     size_t size_;
 
     int LinearSearch_(const T element) {
@@ -237,10 +228,15 @@ private:
 
 int main() {
     DynamicArray<int> arr{ 3, 1, 4, 1, 5, 9, 2, 6 };
-    DynamicArray<int> arr1{ std::move(arr) };
+    
+    arr.Print();
 
-    std::cout << "Arr 2: ";
-    arr1.Print();
-    std::cout << "Arr 1: ";
+    arr.PopFront();
+    arr.Print();
+
+    arr.PopBack();
+    arr.Print();
+
+    arr.Remove(9);
     arr.Print();
 }
